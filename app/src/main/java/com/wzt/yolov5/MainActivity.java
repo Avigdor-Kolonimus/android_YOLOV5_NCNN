@@ -605,7 +605,7 @@ public class MainActivity extends AppCompatActivity {
         return false;
     }
 
-    protected void modeState(){
+    protected void actionByNearBox(Box nearestBox){
         // Warning parameters
         warningX = (float) (width/10.0);
         warningY = (float) (height/10.0);
@@ -613,40 +613,40 @@ public class MainActivity extends AppCompatActivity {
         xRight = (height + warningX)/2;
         yMid = height;
 
+        if ((xLeft >= nearestBox.x0 && xLeft <= nearestBox.x1) || (xRight >= nearestBox.x0 && xRight <= nearestBox.x1)){
+            if (yMid - nearestBox.y1 < warningY){
+                Log.d("myTag", "1-Stop");
+                return;
+            }
+            if (xLeft-nearestBox.x0<= nearestBox.x1-xRight){
+                Log.d("myTag", "2-Left");
+            }else{
+                Log.d("myTag", "3-Right");
+            }
+        }else{
+            if (nearestBox.x1<xLeft){
+                Log.d("myTag", "4-Right");
+                return;
+            }
+            if (nearestBox.x0>xRight){
+                Log.d("myTag", "5-Left");
+            }
+        }
+    }
+    protected void modeState(){
         lastTime = System.currentTimeMillis();
         if (oldSearch.size() == 0)
                 return;
-        if (oldSearch.size() == 1){
-            Box box = oldSearch.get(0);
-            String msg = "warningX: " + String.valueOf(warningX) + "\twarningY: " + String.valueOf(warningX);
-            String msg2 = "xLeft: " + String.valueOf(xLeft) + "\txRight: " + String.valueOf(xRight)+ "\tyMid: " + String.valueOf(yMid);
-            String msg3 = "x0: " + String.valueOf(box.x0) + "\ty0: " + String.valueOf(box.y0)
-                    + "\tx1: " + String.valueOf(box.x1) + "\ty1: " + String.valueOf(box.y1);
-            Log.d("myTag", msg);
-            Log.d("myTag", msg2);
-            Log.d("myTag", msg3);
-            if ((xLeft >= box.x0 && xLeft <= box.x1) || (xRight >= box.x0 && xRight <= box.x1)){
-                if (yMid - box.y1 < warningY){
-                    Log.d("myTag", "1-Stop");
-                    return;
-                }
-                if (xLeft-box.x0<= box.x1-xRight){
-                    Log.d("myTag", "2-Left");
-                }else{
-                    Log.d("myTag", "3-Right");
-                }
-            }else{
-                if (box.x1<xLeft){
-                    Log.d("myTag", "4-Right");
-                    return;
-                }
-                if (box.x0>xRight){
-                    Log.d("myTag", "5-Left");
+        Box nearestBox = oldSearch.get(0);
+        if (oldSearch.size() > 1){
+            for (int i = 1; i < oldSearch.size();i++) {
+                Box tmpBox = oldSearch.get(i);
+                if (nearestBox.y1 < tmpBox.y1) {
+                    nearestBox = tmpBox;
                 }
             }
-        }else{
-            Log.d("myTag", ">1");
         }
+        actionByNearBox(nearestBox);
     }
 
     protected Bitmap drawBoxRects(Bitmap mutableBitmap, Box[] results) {
