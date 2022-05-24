@@ -109,10 +109,16 @@ public class MainActivity extends AppCompatActivity {
     private int width;
     private int height;
 
+    // ----------------------------------------------------------------- Our parameters ------------
     private static String[] wantLabels={"person", "boat",  "snowboard", "skateboard", "surfboard"};
     private List<Box> oldSearch = new ArrayList<Box>();
     private long lastTime =  System.currentTimeMillis();
-    private long deltaTime =  3000;
+    private long deltaTime =  10000;
+    private float warningX =0;
+    private float warningY =0;
+    private float xLeft = 0;
+    private float xRight = 0;
+    private float yMid = 0;
 
     double total_fps = 0;
     int fps_count = 0;
@@ -323,7 +329,6 @@ public class MainActivity extends AppCompatActivity {
             YOLOv5.init(getAssets(), USE_GPU);
         } else if (USE_MODEL == YOLOV4_TINY) {
             YOLOv4.init(getAssets(), true, USE_GPU);
-
         } else if (USE_MODEL == MOBILENETV2_YOLOV3_NANO) {
             YOLOv4.init(getAssets(), false, USE_GPU);
         } else if (USE_MODEL == SIMPLE_POSE) {
@@ -582,6 +587,7 @@ public class MainActivity extends AppCompatActivity {
         }
         return mutableBitmap;
     }
+    // ---------------------------------------------------- Space for coding -----------------------
     protected boolean searchWantLabels(String searchLabel){
         for (String wantLabel: wantLabels){
             if (wantLabel == searchLabel)
@@ -600,17 +606,44 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void modeState(){
+        // Warning parameters
+        warningX = (float) (width/10.0);
+        warningY = (float) (height/10.0);
+        xLeft = (width - warningX)/2;
+        xRight = (height + warningX)/2;
+        yMid = height;
+
         lastTime = System.currentTimeMillis();
         if (oldSearch.size() == 0)
                 return;
         if (oldSearch.size() == 1){
             Box box = oldSearch.get(0);
-            float lengthX = (box.x1 - box.x0);
-            float highY = (box.y1 - box.y0);
-            float square = lengthX*highY;
-            String msg = "label: " + box.getLabel() + "\tlenght: " + String.valueOf(lengthX) + "\thigh: " + String.valueOf(highY)
-                    + "\tsquare: " + String.valueOf(square);
+            String msg = "warningX: " + String.valueOf(warningX) + "\twarningY: " + String.valueOf(warningX);
+            String msg2 = "xLeft: " + String.valueOf(xLeft) + "\txRight: " + String.valueOf(xRight)+ "\tyMid: " + String.valueOf(yMid);
+            String msg3 = "x0: " + String.valueOf(box.x0) + "\ty0: " + String.valueOf(box.y0)
+                    + "\tx1: " + String.valueOf(box.x1) + "\ty1: " + String.valueOf(box.y1);
             Log.d("myTag", msg);
+            Log.d("myTag", msg2);
+            Log.d("myTag", msg3);
+            if ((xLeft >= box.x0 && xLeft <= box.x1) || (xRight >= box.x0 && xRight <= box.x1)){
+                if (yMid - box.y1 < warningY){
+                    Log.d("myTag", "1-Stop");
+                    return;
+                }
+                if (xLeft-box.x0<= box.x1-xRight){
+                    Log.d("myTag", "2-Left");
+                }else{
+                    Log.d("myTag", "3-Right");
+                }
+            }else{
+                if (box.x1<xLeft){
+                    Log.d("myTag", "4-Right");
+                    return;
+                }
+                if (box.x0>xRight){
+                    Log.d("myTag", "5-Left");
+                }
+            }
         }else{
             Log.d("myTag", ">1");
         }
